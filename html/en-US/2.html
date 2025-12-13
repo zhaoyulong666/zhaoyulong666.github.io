@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background-color: white;
+    }
+
+    nav {
+      background-color: #50c4e5;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      white-space: nowrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: white;
+      font-size: 12px;
+    }
+
+    table {
+      border-collapse: collapse;
+      border: 1px solid black;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    th,
+    td {
+      border: 1px solid black;
+      padding: 5px;
+    }
+
+    /* New style to make the row of the search box and button 100% width */
+  .search-row {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="index.html">Home Page</a>
+    <a href="#">Resources</a>
+    <a href="/zh-CN/2.html">Languages</a>
+  </nav>
+  <!-- Wrap the search box and button in a div with a specific class name -->
+  <div class="search-row">
+    <input type="text" id="searchInput">
+    <button onclick="search()">Search</button>
+  </div>
+  <table id="myTable">
+    <tr>
+      <th>Column 1</th>
+      <th>Column 2</th>
+    </tr>
+    <tr>
+      <td>Content 1</td>
+      <td>Other Content 1</td>
+    </tr>
+    <tr>
+      <td>Content 2</td>
+      <td>Other Content 2</td>
+    </tr>
+    <!-- More rows can be added here -->
+  </table>
+  <script>
+    function search() {
+      let inputValue = document.getElementById('searchInput').value;
+      let table = document.getElementById('myTable');
+      let rows = table.getElementsByTagName('tr');
+
+      for (let i = 1; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        for (let j = 0; j < cells.length; j++) {
+          if (cells[j].textContent.includes(inputValue)) {
+            found = true;
+            break;
+          }
+        }
+
+        if (found) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
