@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background-color: white;
+    }
+
+    nav {
+      background-color: #50c4e5;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      white-space: nowrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: white;
+      font-size: 12px;
+    }
+
+    table {
+      border-collapse: collapse;
+      border: 1px solid black;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    th,
+    td {
+      border: 1px solid black;
+      padding: 5px;
+    }
+
+    /* 新增样式，让搜索框和按钮所在行宽度为 100% */
+   .search-row {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="index.html">首页</a>
+    <a href="#">资源</a>
+    <a href="/en-US/2.html">语言</a>
+  </nav>
+  <!-- 将搜索框和按钮包裹在一个具有特定类名的 div 中 -->
+  <div class="search-row">
+    <input type="text" id="searchInput">
+    <button onclick="search()">搜索</button>
+  </div>
+  <table id="myTable">
+    <tr>
+      <th>列 1</th>
+      <th>列 2</th>
+    </tr>
+    <tr>
+      <td>内容 1</td>
+      <td>其他内容 1</td>
+    </tr>
+    <tr>
+      <td>内容 2</td>
+      <td>其他内容 2</td>
+    </tr>
+    <!-- 可以添加更多行 -->
+  </table>
+  <script>
+    function search() {
+      let inputValue = document.getElementById('searchInput').value;
+      let table = document.getElementById('myTable');
+      let rows = table.getElementsByTagName('tr');
+
+      for (let i = 1; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        for (let j = 0; j < cells.length; j++) {
+          if (cells[j].textContent.includes(inputValue)) {
+            found = true;
+            break;
+          }
+        }
+
+        if (found) {
+          rows[i].style.display = '';
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
