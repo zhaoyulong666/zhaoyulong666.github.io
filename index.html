@@ -1,25 +1,478 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-CN" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>跳转页面</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我的导航</title>
+<style>
+  :root{
+    --r:14px;
+    --ease:cubic-bezier(.2,.7,.3,1);
+  }
+  html[data-theme="dark"]{
+    --bg:#0b0f14; --panel:#131a24; --panel-hover:#19222f;
+    --line:#1f2a38; --text:#e6edf5; --muted:#7d8a9c;
+    --accent:#4f9cf9; --accent-soft:rgba(79,156,249,.14);
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --input:#0e141d;
+  }
+  html[data-theme="light"]{
+    --bg:#f2f5f9; --panel:#ffffff; --panel-hover:#ffffff;
+    --line:#e2e8f0; --text:#16202e; --muted:#71809a;
+    --accent:#2f7de1; --accent-soft:rgba(47,125,225,.1);
+    --shadow:0 10px 30px rgba(20,40,80,.12);
+    --input:#f7f9fc;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+    font-size:14px; line-height:1.5;
+    transition:background .25s var(--ease), color .25s var(--ease);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none}
+
+  .app{max-width:1180px; margin:0 auto; padding:26px 22px 70px;}
+
+  /* ============ 顶栏 ============ */
+  .header{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px;}
+  .brand{display:flex; align-items:center; gap:12px; min-width:0}
+  .logo{
+    width:42px;height:42px;border-radius:12px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),#7b5cff);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:18px;
+    box-shadow:0 6px 18px var(--accent-soft);
+  }
+  .brand .title{font-size:15px;font-weight:700;letter-spacing:.3px}
+  .brand .time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  .header-actions{display:flex; gap:9px; flex:0 0 auto}
+  .icon-btn{
+    height:38px; padding:0 14px; border-radius:10px;
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    font-size:13px; font-family:inherit; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px;
+    transition:all .18s var(--ease);
+  }
+  .icon-btn:hover{border-color:var(--accent); color:var(--accent)}
+
+  /* ============ 搜索 ============ */
+  .search-wrap{position:relative; max-width:640px; margin:0 auto 30px;}
+  .search-box{
+    display:flex; align-items:center; gap:6px;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:7px 7px 7px 8px;
+    transition:all .2s var(--ease);
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
+  }
+  .search-box:focus-within{
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft), 0 6px 20px rgba(0,0,0,.12);
+  }
+  .engine-btn{
+    flex:0 0 auto; height:38px; padding:0 12px; border-radius:10px;
+    background:transparent; border:none; color:var(--muted);
+    font-size:13px; font-family:inherit; cursor:pointer;
+    display:inline-flex; align-items:center; gap:5px;
+    transition:all .18s var(--ease); white-space:nowrap;
+  }
+  .engine-btn:hover{background:var(--accent-soft); color:var(--accent)}
+  .engine-btn svg{opacity:.6}
+
+  #searchInput{
+    flex:1 1 auto; min-width:0; height:38px; border:none; outline:none;
+    background:transparent; color:var(--text); font-size:15px; font-family:inherit;
+  }
+  #searchInput::placeholder{color:var(--muted)}
+  .go-btn{
+    flex:0 0 auto; height:38px; width:60px; border-radius:11px; border:none;
+    background:var(--accent); color:#fff; font-size:14px; font-weight:600;
+    font-family:inherit; cursor:pointer; transition:all .18s var(--ease);
+  }
+  .go-btn:hover{filter:brightness(1.1); transform:translateY(-1px)}
+
+  .engine-menu{
+    position:absolute; top:calc(100% + 8px); left:0; z-index:50;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:6px; min-width:150px; box-shadow:var(--shadow);
+    display:none;
+  }
+  .engine-menu.show{display:block; animation:pop .16s var(--ease)}
+  .engine-menu button{
+    display:block; width:100%; text-align:left; padding:8px 11px;
+    border:none; background:transparent; color:var(--text); font-size:13px;
+    font-family:inherit; border-radius:8px; cursor:pointer;
+    transition:background .15s;
+  }
+  .engine-menu button:hover{background:var(--accent-soft); color:var(--accent)}
+  .engine-menu button.active{color:var(--accent); font-weight:600}
+
+  @keyframes pop{from{opacity:0; transform:translateY(-6px)}to{opacity:1; transform:none}}
+
+  /* ============ 分类 ============ */
+  .cats{
+    display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px;
+    justify-content:center;
+  }
+  .cat{
+    padding:7px 15px; border-radius:99px; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    font-size:13px; font-family:inherit;
+    transition:all .18s var(--ease); user-select:none;
+  }
+  .cat:hover{color:var(--text); border-color:var(--accent)}
+  .cat.active{
+    background:var(--accent); border-color:var(--accent);
+    color:#fff; font-weight:600;
+    box-shadow:0 4px 14px var(--accent-soft);
+  }
+  .cat .num{opacity:.65; font-size:11px; margin-left:4px}
+
+  /* ============ 网格 ============ */
+  .grid{
+    display:grid; gap:13px;
+    grid-template-columns:repeat(auto-fill, minmax(212px,1fr));
+  }
+  .card{
+    position:relative; display:flex; align-items:center; gap:12px;
+    padding:14px; border-radius:var(--r);
+    background:var(--panel); border:1px solid var(--line);
+    cursor:pointer; transition:all .2s var(--ease);
+    animation:fadeUp .32s var(--ease) both;
+    min-width:0;
+  }
+  @keyframes fadeUp{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+  .card:hover{
+    transform:translateY(-3px);
+    border-color:var(--accent);
+    background:var(--panel-hover);
+    box-shadow:var(--shadow);
+  }
+  .card:active{transform:translateY(-1px)}
+
+  .card .ico{
+    width:44px; height:44px; flex:0 0 auto; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:17px;
+    letter-spacing:-.5px;
+  }
+  .card .meta{min-width:0; flex:1 1 auto}
+  .card .name{
+    font-size:14px; font-weight:600; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .card .desc{
+    font-size:12px; color:var(--muted); white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; margin-top:1px;
+  }
+
+  .empty{
+    grid-column:1/-1; text-align:center; color:var(--muted);
+    padding:60px 20px; font-size:13px;
+  }
+
+  @media (max-width:640px){
+    .app{padding:18px 14px 60px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px}
+    .card{padding:12px; gap:10px}
+    .card .ico{width:38px;height:38px;border-radius:10px;font-size:15px}
+    .brand .title{font-size:14px}
+    .logo{width:38px;height:38px}
+    .icon-btn{padding:0 11px; font-size:12px}
+    .go-btn{width:52px}
+  }
+</style>
 </head>
-
 <body>
-  <div>加载中...</div>
-  <script>
-    window.location.href = './html/';
-  </script>
-</body>
 
+<div class="app">
+
+  <!-- 顶栏 -->
+  <header class="header">
+    <div class="brand">
+      <div class="logo">导</div>
+      <div>
+        <div class="title">我的导航</div>
+        <div class="time" id="clock">--:--:--</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btnTheme" title="切换主题">🌙 主题</button>
+    </div>
+  </header>
+
+  <!-- 搜索 -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <button class="engine-btn" id="engineBtn">
+        <span id="engineName">百度</span>
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1 3l4 4 4-4" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <input id="searchInput" placeholder="搜索，或直接输入网址…" autocomplete="off" spellcheck="false">
+      <button class="go-btn" id="goBtn">搜索</button>
+    </div>
+    <div class="engine-menu" id="engineMenu"></div>
+  </div>
+
+  <!-- 分类 -->
+  <nav class="cats" id="cats"></nav>
+
+  <!-- 卡片网格 -->
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+
+  /* ================= 书签数据（想改内容直接改这里） ================= */
+  const BOOKMARKS = [
+    {name:'百度',      url:'https://www.baidu.com',        desc:'中文搜索引擎', cat:'常用'},
+    {name:'Google',    url:'https://www.google.com',       desc:'全球搜索引擎', cat:'常用'},
+    {name:'必应',      url:'https://www.bing.com',         desc:'微软搜索',     cat:'常用'},
+    {name:'知乎',      url:'https://www.zhihu.com',        desc:'问答社区',     cat:'常用'},
+    {name:'微博',      url:'https://weibo.com',            desc:'社交媒体',     cat:'常用'},
+  ];
+
+  /* ================= 搜索引擎 ================= */
+  const ENGINES = [
+    {name:'百度',   url:'https://www.baidu.com/s?wd='},
+    {name:'Google', url:'https://www.google.com/search?q='},
+    {name:'必应',   url:'https://www.bing.com/search?q='},
+    {name:'知乎',   url:'https://www.zhihu.com/search?q='},
+    {name:'GitHub', url:'https://github.com/search?q='},
+    {name:'B站',    url:'https://search.bilibili.com/all?keyword='}
+  ];
+
+  const state = {
+    filter: '全部',
+    engine: 0
+  };
+
+  /* ================= 工具 ================= */
+  function hostOf(url){
+    try { return new URL(url).hostname.replace(/^www\./, ''); }
+    catch(e){ return url; }
+  }
+
+  function initialOf(bm){
+    const c = (hostOf(bm.url) || bm.name || '?').trim().charAt(0);
+    return c ? c.toUpperCase() : '?';
+  }
+
+  function hueOf(str){
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+    return h;
+  }
+
+  function iconStyle(bm){
+    const hue = hueOf(hostOf(bm.url) + bm.name);
+    return 'background:linear-gradient(135deg,hsl(' + hue + ',68%,56%),hsl(' +
+           ((hue + 38) % 360) + ',66%,46%))';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function normalizeUrl(u){
+    u = String(u || '').trim();
+    if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  function looksLikeUrl(str){
+    const s = str.trim();
+    if (!s || /\s/.test(s)) return false;
+    if (/^https?:\/\//i.test(s)) return true;
+    return /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(s);
+  }
+
+  /* ================= 主题 ================= */
+  function setTheme(t, save){
+    document.documentElement.setAttribute('data-theme', t);
+    $('btnTheme').textContent = (t === 'dark' ? '🌙' : '☀️') + ' 主题';
+    if (save !== false) localStorage.setItem('nav.theme', t);
+  }
+
+  function currentTheme(){
+    return document.documentElement.getAttribute('data-theme') || 'dark';
+  }
+
+  /* ================= 时钟 ================= */
+  function tickClock(){
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    $('clock').textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  /* ================= 分类 ================= */
+  function categoryList(){
+    const set = [];
+    BOOKMARKS.forEach(b => {
+      const c = (b.cat || '未分类').trim();
+      if (set.indexOf(c) < 0) set.push(c);
+    });
+    return set;
+  }
+
+  function renderCats(){
+    const box = $('cats');
+    const cats = categoryList();
+    const items = ['全部'].concat(cats);
+
+    if (items.indexOf(state.filter) < 0) state.filter = '全部';
+
+    const total = BOOKMARKS.length;
+
+    box.innerHTML = items.map(function(c){
+      const n = c === '全部'
+        ? total
+        : BOOKMARKS.filter(b => (b.cat || '未分类') === c).length;
+      const active = state.filter === c ? ' active' : '';
+      return '<div class="cat' + active + '" data-cat="' + escapeHtml(c) + '">' +
+             escapeHtml(c) + '<span class="num">' + n + '</span></div>';
+    }).join('');
+
+    Array.prototype.forEach.call(box.querySelectorAll('.cat'), function(el){
+      el.addEventListener('click', function(){
+        state.filter = el.dataset.cat;
+        renderCats();
+        renderGrid();
+      });
+    });
+  }
+
+  /* ================= 网格 ================= */
+  function renderGrid(){
+    const grid = $('grid');
+    const list = state.filter === '全部'
+      ? BOOKMARKS
+      : BOOKMARKS.filter(b => (b.cat || '未分类') === state.filter);
+
+    let html = list.map(function(b, i){
+      const desc = b.desc || hostOf(b.url);
+      return '' +
+      '<div class="card" data-url="' + escapeHtml(b.url) + '" style="animation-delay:' +
+        Math.min(i * 18, 260) + 'ms">' +
+        '<div class="ico" style="' + iconStyle(b) + '">' + escapeHtml(initialOf(b)) + '</div>' +
+        '<div class="meta">' +
+          '<div class="name">' + escapeHtml(b.name) + '</div>' +
+          '<div class="desc">' + escapeHtml(desc) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    if (!list.length){
+      html = '<div class="empty">这里还没有书签</div>';
+    }
+
+    grid.innerHTML = html;
+
+    Array.prototype.forEach.call(grid.querySelectorAll('.card'), function(card){
+      card.addEventListener('click', function(){
+        window.open(card.dataset.url, '_blank', 'noopener');
+      });
+    });
+  }
+
+  /* ================= 搜索 ================= */
+  function renderEngineMenu(){
+    const menu = $('engineMenu');
+    menu.innerHTML = ENGINES.map(function(e, i){
+      return '<button data-i="' + i + '"' +
+             (i === state.engine ? ' class="active"' : '') + '>' +
+             escapeHtml(e.name) + '</button>';
+    }).join('');
+
+    Array.prototype.forEach.call(menu.querySelectorAll('button'), function(btn){
+      btn.addEventListener('click', function(){
+        state.engine = parseInt(btn.dataset.i, 10);
+        localStorage.setItem('nav.engine', state.engine);
+        $('engineName').textContent = ENGINES[state.engine].name;
+        renderEngineMenu();
+        menu.classList.remove('show');
+        $('searchInput').focus();
+      });
+    });
+  }
+
+  function doSearch(){
+    const raw = $('searchInput').value.trim();
+    if (!raw) { $('searchInput').focus(); return; }
+
+    if (looksLikeUrl(raw)){
+      window.open(normalizeUrl(raw), '_blank', 'noopener');
+    } else {
+      window.open(ENGINES[state.engine].url + encodeURIComponent(raw), '_blank', 'noopener');
+    }
+  }
+
+  /* ================= 事件绑定 ================= */
+  function bind(){
+    $('btnTheme').addEventListener('click', function(){
+      setTheme(currentTheme() === 'dark' ? 'light' : 'dark', true);
+    });
+
+    $('goBtn').addEventListener('click', doSearch);
+    $('searchInput').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') doSearch();
+      if (e.key === 'Escape') this.value = '';
+    });
+
+    $('engineBtn').addEventListener('click', function(e){
+      e.stopPropagation();
+      $('engineMenu').classList.toggle('show');
+    });
+    document.addEventListener('click', function(e){
+      if (!e.target.closest('.search-wrap')) $('engineMenu').classList.remove('show');
+    });
+
+    // 快捷键：/ 聚焦搜索
+    document.addEventListener('keydown', function(e){
+      const tag = (e.target.tagName || '').toLowerCase();
+      const typing = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
+      if (typing) return;
+      if (e.key === '/'){
+        e.preventDefault();
+        $('searchInput').focus();
+      }
+    });
+  }
+
+  /* ================= 启动 ================= */
+  function init(){
+    // 主题
+    const t = localStorage.getItem('nav.theme');
+    setTheme(t === 'light' ? 'light' : 'dark', false);
+
+    // 引擎
+    const e = parseInt(localStorage.getItem('nav.engine'), 10);
+    if (e >= 0 && e < ENGINES.length) state.engine = e;
+    $('engineName').textContent = ENGINES[state.engine].name;
+
+    renderEngineMenu();
+    renderCats();
+    renderGrid();
+    bind();
+    tickClock();
+    setInterval(tickClock, 1000);
+  }
+
+  init();
+})();
+</script>
+</body>
 </html>
