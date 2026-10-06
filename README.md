@@ -11,7 +11,6 @@
 ### 环境要求
 
 - 现代浏览器（Chrome / Edge / Firefox / Safari）
-- 可选：本地静态服务器
 
 ### 安装与运行
 
